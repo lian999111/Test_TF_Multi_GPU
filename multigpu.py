@@ -5,7 +5,7 @@ import numpy as np
 tf.debugging.set_log_device_placement(True)
 
 # %%
-use_sim_gpu = True
+use_sim_gpu = False
 if use_sim_gpu:
   gpus = tf.config.experimental.list_physical_devices('GPU')
   if gpus:
