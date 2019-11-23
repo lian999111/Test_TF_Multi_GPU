@@ -48,7 +48,7 @@ with tf.GradientTape() as tape:
     d = tf.sigmoid(z) + c                              # 3 x 1
 
 # Compute gradients of d w.r.t. W and b on GPU:1
-with tf.device('GPU:1'):
+with tf.device('GPU:0'):
   grads = tape.gradient(d, [W, b])
 
 # %%
