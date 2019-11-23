@@ -31,6 +31,7 @@ with tf.device('/GPU:0'):
   c = tf.constant([[2.0], [2.0], [2.0]])                   # 3 x 1
 
 # A simple tensor operation
+# @tf.function decorator allows better performance using AutoGraph
 @tf.function
 def simple_op(x):
 # input a 2 x 1 array
