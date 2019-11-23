@@ -22,18 +22,36 @@ if use_sim_gpu:
       print(e)
 
 # %%
+# Create tensors on each GPU
 with tf.device('/GPU:0'):
-  a = tf.Variable([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])   # 2 x 3 
-  b = tf.constant([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]) # 3 x 2
-  W = tf.matmul(a, b)                                   # 2 x 2
-
+  W = tf.Variable([[1.0, 2.0], [-1.0, -1.0], [-1.0, 2.0]]) # 3 x 2
 with tf.device('/GPU:1'):
-  c = tf.constant([[100.0, 100.0], [100.0, 100.0]])     # 2 x 2
-  d = tf.matmul(W, c)                                   # 2 x 2
-print('d: {}'.format(d))
-
+  b = tf.Variable([[1.0], [1.0], [1.0]])                # 3 x 1
 with tf.device('/GPU:0'):
-  e = d + W                                             # 2 x 2
-print('e: {}'.format(e))
+  c = tf.constant([[2.0], [2.0], [2.0]])                   # 3 x 1
+
+# A simple tensor operation
+@tf.function
+def simple_op(x):
+# input a 2 x 1 array
+  with tf.device('/GPU:0'):
+    z = tf.matmul(W, x) + b                             # 3 x 1             
+  return z
+
+# Use GradientTape to record operations
+# Operations in simple_op() will be done on GPU:0 as specified in the def above
+# Sigmoid and adding of c are done on GPU:1
+with tf.GradientTape() as tape:
+  with tf.device('/GPU:1'):
+    z = simple_op([[1.0], [-1.0]])                     # 3 x 1
+    d = tf.sigmoid(z) + c                              # 3 x 1
+
+# Compute gradients of d w.r.t. W and b on GPU:1
+with tf.device('GPU:1'):
+  grads = tape.gradient(d, [W, b])
 
 # %%
+print('z: {}'.format(z))
+print('d: {}'.format(d))
+print('dd_dW: {}'.format(grads[0].numpy()))
+print('dd_db: {}'.format(grads[1].numpy()))
